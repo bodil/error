@@ -36,9 +36,31 @@ runs it on PhantomJS.
 
 ## Usage
 
+### Leiningen
+
 Tests can be run through Leiningen by executing `lein error`. You can
 specify which environments to run the test suite in by giving keyword
 arguments to `lein error`, eg. `lein error :node :phantom`.
+
+### REPL
+
+To run the test suite from the REPL, simply ensure that the tests you
+wish to run are loaded into the REPL, and run
+`(error.test/run-tests)`.
+
+For instance, to run Error's own test suite, start a REPL in Error's
+project directory and run the following:
+
+```clojure
+$ lein trampoline noderepl
+"Type: " :cljs/quit " to quit"
+ClojureScript:cljs.user> (load-file "error/case.cljs")
+ClojureScript:cljs.user> (error.test/run-tests)
+
+Running 8 tests from 1 namespace in environment node
+
+8 tests succeeded.
+```
 
 ## Writing Tests
 
