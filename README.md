@@ -40,8 +40,6 @@ Tests can be run through Leiningen by executing `lein error`. You can
 specify which environments to run the test suite in by giving keyword
 arguments to `lein error`, eg. `lein error :node :phantom`.
 
-TODO: Running tests from a REPL is not yet supported.
-
 ## Writing Tests
 
 Tests are defined using the `test` macro. Error is intended for
@@ -76,7 +74,13 @@ timeout in a test's options map, as seen below.
   (js/setTimeout #(done) 14000))
 ```
 
-# License
+## TODO
+
+* Needs a REPL workflow. Currently only the Leiningen plugin works properly.
+* Nashorn test runner, perhaps degrading to Rhino on JDK < 8.
+* Watch mode for `lein error`.
+
+## License
 
 Copyright 2013 Bodil Stokke
 
