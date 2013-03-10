@@ -9,7 +9,7 @@
   {:dev
    {:dependencies [[org.bodil/cljs-noderepl "0.1.8"]]
     :plugins [[org.bodil/lein-noderepl "0.1.8"]
-              [org.bodil/lein-error "0.1.0"]]
+              [org.bodil/lein-error "0.1.1"]]
     :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}}}
   :cljsbuild
   {:builds {:test {:source-paths ["src" "test"]
