@@ -11,7 +11,7 @@ Add Error as a development dependency in `project.clj`:
 
 ```clojure
 :profiles {:dev {:plugins [[org.bodil/lein-error "0.1.0"]]
-                 :dependencies [[org.bodil/error "0.1.0]]}}
+                 :dependencies [[org.bodil/error "0.1.0"]]}}
 ```
 
 You also need to set up a cljsbuild for compiling your tests. It needs
