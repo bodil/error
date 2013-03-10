@@ -40,6 +40,8 @@ Tests can be run through Leiningen by executing `lein error`. You can
 specify which environments to run the test suite in by giving keyword
 arguments to `lein error`, eg. `lein error :node :phantom`.
 
+TODO: Running tests from a REPL is not yet supported.
+
 ## Writing Tests
 
 Tests are defined using the `test` macro. Error is intended for
