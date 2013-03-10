@@ -15,4 +15,5 @@ context.require = require;
 
 vm.runInContext(code, context, path);
 vm.runInContext("cljs.core.string_print = function(s) { require('util').print(s); };", context);
-vm.runInContext("error.test.run_tests('node');", context);
+vm.runInContext("error.environment.in_repl = false;", context);
+vm.runInContext("error.test.run_tests();", context);

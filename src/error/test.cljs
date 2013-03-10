@@ -1,35 +1,20 @@
 (ns error.test
   (:use-macros [redlobster.macros :only [waitp when-realised]])
   (:require [error.assert :as a]
+            [error.environment :as env]
             [redlobster.promise :as p]
             [clojure.string :as s]))
 
 
 
 (def ^:private tests {})
-
-
-
-(defn- on-node? []
-  (try (string? process.versions.node)
-       (catch js/Error e false)))
-
-(defn- on-browser? []
-  (try (string? navigator.userAgent)
-       (catch js/Error e false)))
-
-(defn- valid-platform? [platforms]
-  (if (nil? platforms)
-    true
-    (let [platforms (if (keyword? platforms) #{platforms} (set platforms))]
-      (cond
-       (on-node?) (:node platforms)
-       (on-browser?) (:browser platforms)))))
+(def ^:private environment (env/detect-environment))
 
 
 
 (defprotocol ITest
-  (-start [this]))
+  (-start [this])
+  (-success? [this]))
 
 (defrecord Test [namespace description test-func options promise]
   IDeref
@@ -44,36 +29,72 @@
 
   ITest
   (-start [this]
-    (test-func this)
+    (try*
+     (test-func this)
+     (catch e
+         (p/realise-error promise e)))
     (p/timeout this (get options :timeout 10000))
-    this))
+    this)
+  (-success? [this]
+    ;; (case (:expect options)
+    ;;   nil (and (not (p/failed? this)) (= :error.test/success @this))
+    ;;   :fail (and (not (p/failed? this)) (not (= :error.test/success @this)))
+    ;;   :timeout (and (p/failed? this) (= :redlobster.promise/timeout @this))
+    ;;   :error (and (p/failed? this) (not= :redlobster.promise/timeout @this))
+    ;;   (and (p/failed? this) (satisfies? (:expect options) @this)))
+    (cond
+     (nil? (:expect options))
+     (and (not (p/failed? this)) (= :error.test/success @this))
+
+     (= :fail (:expect options))
+     (and (not (p/failed? this)) (not (= :error.test/success @this)))
+
+     (= :timeout (:expect options))
+     (and (p/failed? this) (= :redlobster.promise/timeout @this))
+
+     (= :error (:expect options))
+     (and (p/failed? this) (not= :redlobster.promise/timeout @this))
+
+     :else
+     (and (p/failed? this) (instance? (:expect options) @this)))))
+
+(defn- active-test? [ns desc test options]
+  (and (env/valid-platform? (:only options))
+       (not (:ignore options))
+       (not (= ";" (subs desc 0 1)))))
 
 (defn- launch-test [ns desc test options]
   (-start (Test. ns desc test options (p/promise))))
 
 (defn- launch-suite [suite]
   (for [ns (keys suite) [desc test options] (suite ns)
-        :when (valid-platform? (:only options))]
+        :when (active-test? ns desc test options)]
     (launch-test ns desc test options)))
 
 
 
 (defn- succeeded? [test]
-  (and (not (p/failed? test)) (= :error.test/success @test)))
+  (-success? test))
 
 (defn- failed? [test]
-  (and (not (p/failed? test)) (not (= :error.test/success @test))))
+  (and (not (-success? test))
+       (not (p/failed? test))))
 
 (defn- errored? [test]
-  (and (p/failed? test) (not= :redlobster.promise/timeout @test)))
+  (and (not (-success? test))
+       (p/failed? test)
+       (not= :redlobster.promise/timeout @test)))
 
 (defn- timed-out? [test]
-  (and (p/failed? test) (= :redlobster.promise/timeout @test)))
+  (and (not (-success? test))
+       (p/failed? test)
+       (= :redlobster.promise/timeout @test)))
 
 
 
 (defn- ansi [code string]
-  (str \u001b "[" code string \u001b "[0m"))
+  (if (env/in-repl?) string
+      (str \u001b "[" code string \u001b "[0m")))
 
 (defn- pluralise [value descriptor suffix]
   (let [out (str value " " descriptor)]
@@ -85,32 +106,37 @@
 (defn- str-list [& items]
   (str (s/join ", " (remove nil? items)) "."))
 
-(defn- header [suite context]
-  (str (ansi "36;1m" "ERROR")
-       (ansi "34;1m"
-        (str " running "
-             (pluralise (count suite) "test" "")
-             " from "
-             (pluralise (-> (map #(:namespace %) suite) set count) "namespace" "")
-             " in environment "))
-       (ansi "33;1m" context)))
+(defn- header [suite]
+  (str (ansi "34;1m"
+             (str "Running "
+                  (pluralise (count suite) "test" "")
+                  " from "
+                  (pluralise (-> (map #(:namespace %) suite) set count) "namespace" "")
+                  " in environment "))
+       (ansi "33;1m" environment)))
 
 (defn- test-result [test]
   (waitp test
-    #(do
-       (cond
-        (succeeded? test)
-        (print (ansi "32m" "."))
+         #(do
+            (cond
+             (succeeded? test)
+             (print (ansi "32m" "."))
 
-        (failed? test)
-        (print (ansi "31;1m" "!")))
+             (failed? test)
+             (print (ansi "31;1m" "!")))
 
-       (realise %))
-    #(do
-       (print (if (timed-out? test)
-                (ansi "33m" "?")
-                (ansi "33m" "!")))
-       (realise-error %))))
+            (realise %))
+         #(do
+            (cond
+             (succeeded? test)
+             (print (ansi "32m" "."))
+
+             (timed-out? test)
+             (print (ansi "33m" "?"))
+
+             :else
+             (print (ansi "33m" "!")))
+            (realise-error %))))
 
 (defn- report-summary [suite]
   (let [succeeded (filter succeeded? suite)
@@ -139,30 +165,37 @@
    (str (ansi "33m" (str "ERROR "))
         (ansi "36m" (str (:namespace test) ": " (:description test)))
         "\n    "
-        @test)))
+        @test)
+
+   :else (.inspect (js/require "util") @test)))
 
 
 
-(defn run-tests [context]
-  (let [t (launch-suite tests)]
-    (println)
-    (println (header t context))
-    (println)
+(defn run-tests []
+  (if (empty? tests)
+    (println (ansi "31;1m" "ERROR") (ansi "34;1m" "no tests defined."))
 
-    (when-realised (cons :all (map test-result t))
-      (println "\n")
-      (let [reporting (remove succeeded? t)
-            success (= 0 (count reporting))]
-        (println (ansi (if success "32;1m" "31;1m")
-                       (report-summary t)))
-        (println)
-        (doseq [test reporting]
-          (println (report-fail test)))
-        (when (seq reporting) (println))
+    (let [t (launch-suite tests)]
+      (println)
+      (println (header t))
+      (println)
 
-        (cond
-         (= context "node")
-         (.exit js/process (if success 0 1))
+      (when-realised (cons :all (map (if (env/in-repl?) identity test-result) t))
+        (println "\n")
+        (let [reporting (remove succeeded? t)
+              success (= 0 (count reporting))]
+          (println (ansi (if success "32;1m" "31;1m")
+                         (report-summary t)))
+          (println)
+          (doseq [test reporting]
+            (println (report-fail test)))
+          (when (seq reporting) (println))
+          (when-not (env/in-repl?)
+            (cond
+             (= environment "node")
+             (.exit js/process (if success 0 1))
 
-         (= context "phantom")
-         (window/callPhantom (js-obj "cmd" "quit" "data" (if success 0 1))))))))
+             (= environment "phantom")
+             (window/callPhantom
+              (js-obj "cmd" "quit" "data" (if success 0 1)))))))
+      nil)))

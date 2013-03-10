@@ -7,19 +7,12 @@
   :dependencies [[org.bodil/redlobster "0.2.0"]]
   :profiles
   {:dev
-   {:dependencies [[org.bodil/cljs-noderepl "0.1.7"]]
-    :plugins [[org.bodil/lein-noderepl "0.1.7"]
+   {:dependencies [[org.bodil/cljs-noderepl "0.1.8"]]
+    :plugins [[org.bodil/lein-noderepl "0.1.8"]
               [org.bodil/lein-error "0.1.0"]]
     :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}}}
   :cljsbuild
-  {:builds {:dev {:source-paths ["src"]
-                  :compiler
-                  {:output-to "js/main.js"
-                   :optimizations :simple
-                   :pretty-print true
-                   :target :nodejs
-                   :jar true}}
-            :test {:source-paths ["src" "test"]
+  {:builds {:test {:source-paths ["src" "test"]
                    :compiler
                    {:output-to "js/test.js"
                     :optimizations :simple

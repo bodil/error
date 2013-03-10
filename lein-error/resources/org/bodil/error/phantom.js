@@ -18,10 +18,11 @@ page.onCallback = function(msg) {
 page.onLoadFinished = function() {
   page.injectJs(path);
   page.evaluate(function() {
+    error.environment.in_repl = false;
     cljs.core.string_print = function(s) {
       window.callPhantom({cmd: "write", data: s});
     };
-    error.test.run_tests("phantom");
+    error.test.run_tests();
   });
 };
 

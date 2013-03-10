@@ -72,7 +72,34 @@ timeout in a test's options map, as seen below.
 
 (test {:timeout 15000} "should succeed in 14 seconds"
   (js/setTimeout #(done) 14000))
+
+(test {:expect :fail} "a failing test expected to fail should succeed"
+  (is (= 13 37))
+  (done))
 ```
+
+### Test Options
+
+The following options are supported by the `test` macro:
+
+* `:timeout <number>` defines the number of milliseconds a test has to
+  complete before failing with a timeout. Defaults to 10 seconds.
+* `:only <environment>` takes a set of keywords, or just one keyword,
+  describing which environments the test is valid for. If the test
+  suite is running in a different environment, the test will be
+  skipped. Valid environments are `:node` and `:browser`.
+* `:ignore true` will cause the test to be ignored.
+* `:expect <result>` redefines a test's success condition. The
+  argument can be either of the following:
+  * `:fail` expects the test to fail.
+  * `:timeout` expects the test to time out.
+  * `:error` expects the test to result in an exception.
+  * Any other value expects the test to result in an exception which
+    satisfies `(instance? <value> <exception>)`. For example, `:expect
+    js/TypeError` expects the test to throw a TypeError exception.
+
+Additionally, if the test's description string starts with the comment
+character `;`, it will be ignored just as if `:ignore true` were set.
 
 ## TODO
 
