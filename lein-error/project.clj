@@ -1,4 +1,4 @@
-(defproject org.bodil/lein-error "0.1.0"
+(defproject org.bodil/lein-error "0.1.1"
   :description "Leiningen plugin for running Error tests"
   :url "https://github.com/bodil/error"
   :license {:name "Apache License, version 2.0"
