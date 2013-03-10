@@ -13,3 +13,5 @@ pom.xml
 .lein-repl-history
 /.repl
 /lein-error/target
+/lein-error/pom.xml.asc
+/pom.xml.asc
