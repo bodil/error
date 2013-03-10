@@ -7,13 +7,7 @@ code.
 
 ## Setup
 
-Add the Leiningen plugin to your `project.clj` or
-`~/.lein/profiles.clj`:
-
-```clojure
-```
-
-Then, add Error as a development dependency in `project.clj`:
+Add Error as a development dependency in `project.clj`:
 
 ```clojure
 :profiles {:dev {:plugins [[org.bodil/lein-error "0.1.0"]]
