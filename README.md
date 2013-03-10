@@ -42,6 +42,13 @@ arguments to `lein error`, eg. `lein error :node :phantom`.
 
 ## Writing Tests
 
+Tests are defined using the `test` macro. Error is intended for
+testing asynchronous code, so a function `done` is provided inside the
+scope of the test, which must be called when the test is finished. If
+you forget to call `done`, the test will eventually time out and fail.
+Default timeout is set to 10 seconds, but you can specify a custom
+timeout in a test's options map, as seen below.
+
 ```clojure
 (ns i.can.has.tests
   (:require-macros [error.macros :refer [test is]])
@@ -62,6 +69,9 @@ arguments to `lein error`, eg. `lein error :node :phantom`.
 
 (test {:only :node} "node specific test should only run on node"
   (process/nextTick #(done)))
+
+(test {:timeout 15000} "should succeed in 14 seconds"
+  (js/setTimeout #(done) 14000))
 ```
 
 # License
