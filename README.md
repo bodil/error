@@ -103,7 +103,6 @@ character `;`, it will be ignored just as if `:ignore true` were set.
 
 ## TODO
 
-* Needs a REPL workflow. Currently only the Leiningen plugin works properly.
 * Nashorn test runner, perhaps degrading to Rhino on JDK < 8.
 * Watch mode for `lein error`.
 
