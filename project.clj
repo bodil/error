@@ -1,4 +1,4 @@
-(defproject org.bodil/error "0.1.1"
+(defproject org.bodil/error "0.1.2"
   :description "Async testing toolkit for ClojureScript"
   :url "https://github.com/bodil/error"
   :license {:name "Apache License, version 2.0"
@@ -9,7 +9,7 @@
   {:dev
    {:dependencies [[org.bodil/cljs-noderepl "0.1.8"]]
     :plugins [[org.bodil/lein-noderepl "0.1.8"]
-              [org.bodil/lein-error "0.1.1"]]
+              [org.bodil/lein-error "0.1.2"]]
     :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}}}
   :cljsbuild
   {:builds {:test {:source-paths ["src" "test"]
