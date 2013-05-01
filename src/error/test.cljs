@@ -199,3 +199,6 @@
              (window/callPhantom
               (js-obj "cmd" "quit" "data" (if success 0 1)))))))
       nil)))
+
+(defn clear []
+  (set! tests {}))
