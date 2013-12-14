@@ -29,9 +29,9 @@
 
   ITest
   (-start [this]
-    (try*
+    (try
      (test-func this)
-     (catch e
+     (catch :default e
          (p/realise-error promise e)))
     (p/timeout this (get options :timeout 10000))
     this)
